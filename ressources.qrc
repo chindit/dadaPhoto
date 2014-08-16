@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/menus">
+        <file>images/about.png</file>
+        <file>images/enregistrer.png</file>
+        <file>images/fermer.png</file>
+        <file>images/ouvrir.png</file>
+        <file>images/quitter.png</file>
+        <file>images/qt.png</file>
+    </qresource>
+    <qresource prefix="/boutons">
+        <file>images/next.png</file>
+        <file>images/previous.png</file>
+        <file>images/imprimer.png</file>
+        <file>images/sauvegarder.png</file>
+        <file>images/supprimer.png</file>
+        <file>images/appliquer.png</file>
+        <file>images/rotation_antihoraire.png</file>
+        <file>images/rotation_horaire.png</file>
+        <file>images/image.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>images/dadaphoto.png</file>
+    </qresource>
+</RCC>
