@@ -188,15 +188,15 @@ void dadaPhoto::prepareApply(){
 
 void dadaPhoto::apply(){
     //1 créer un nouveau dossier
-    QDate current = QDate::currentDate();
-    QString nomDossier = current.toString("ddMMyy");
-    QDir dirDossier =  QDir(QDir::homePath()+"/Images/Photos_"+nomDossier);
+    //QDate current = QDate::currentDate();
+    //QString nomDossier = current.toString("ddMMyy");
+    QDir dirDossier =  QDir(QDir::homePath()+"/Images/Photos_vues");
     if(!dirDossier.exists()){
         //Le dossier n'existe pas, on peut le créer
         dirDossier.mkdir(dirDossier.path());
     }
     //Création des autres dossiers
-    dirDossier.setPath(QDir::homePath()+"/Images/Imprimer_"+nomDossier);
+    dirDossier.setPath(QDir::homePath()+"/Images/Imprimer");
     if(!dirDossier.exists()){
         dirDossier.mkdir(dirDossier.path());
     }
@@ -209,7 +209,7 @@ void dadaPhoto::apply(){
 
     //3 Copier
     for(int i=0; i<imprimer.size(); i++){
-        QFile::copy(dossier.path()+"/"+imprimer.at(i), QDir::homePath()+"/Images/Imprimer_"+nomDossier+"/"+imprimer.at(i));
+        QFile::copy(dossier.path()+"/"+imprimer.at(i), QDir::homePath()+"/Images/Imprimer/"+imprimer.at(i));
     }
     imprimer.clear();
 
@@ -217,13 +217,13 @@ void dadaPhoto::apply(){
     for(int i=0; i<visitees.size(); i++){
         QFile photo; photo.setFileName(dossier.path()+"/"+visitees.at(i));
         if(photo.exists()){
-            photo.rename(QDir::homePath()+"/Images/Photos_"+nomDossier+"/"+visitees.at(i));
+            photo.rename(QDir::homePath()+"/Images/Photos_vues/"+visitees.at(i));
         }
     }
     visitees.clear();
 
     //Petit message
-    QMessageBox::information(this, "Fini!", "Voilà, tout a été déplacé et/ou supprimé.  Pour rappel, les photos à imprimer se trouvent ici:"+QDir::homePath()+"/Images/Imprimer_"+nomDossier+" et les photos visitées ici: "+QDir::homePath()+"/Images/Photos_"+nomDossier);
+    QMessageBox::information(this, "Fini!", "Voilà, tout a été déplacé et/ou supprimé.  Pour rappel, les photos à imprimer se trouvent ici:"+QDir::homePath()+"/Images/Imprimer et les photos visitées ici: "+QDir::homePath()+"/Images/Photos_vues");
 }
 
 void dadaPhoto::nextImage(){
@@ -275,12 +275,15 @@ void dadaPhoto::askQuit(){
             return;
         }
         if(reponse == QMessageBox::No){
-            qApp->exit();
+            qApp->quit();
         }
         if(reponse == QMessageBox::Yes){
             this->prepareApply();
-            qApp->exit();
+            qApp->quit();
         }
+    }
+    else{
+        this->close();
     }
 }
 

@@ -130,6 +130,9 @@
            <iconset resource="ressources.qrc">
             <normaloff>:/boutons/images/rotation_antihoraire.png</normaloff>:/boutons/images/rotation_antihoraire.png</iconset>
           </property>
+          <property name="shortcut">
+           <string>Up</string>
+          </property>
          </widget>
         </item>
         <item>
@@ -152,6 +155,9 @@
           <property name="icon">
            <iconset resource="ressources.qrc">
             <normaloff>:/boutons/images/rotation_horaire.png</normaloff>:/boutons/images/rotation_horaire.png</iconset>
+          </property>
+          <property name="shortcut">
+           <string>Down</string>
           </property>
          </widget>
         </item>
