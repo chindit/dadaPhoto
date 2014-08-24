@@ -55,7 +55,6 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
 dadaPhoto::~dadaPhoto(){
     delete ui;
     delete image;
-    delete imageLabel;
 }
 
 void dadaPhoto::resizeEvent(QResizeEvent* event)
