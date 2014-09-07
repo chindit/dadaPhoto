@@ -13,6 +13,11 @@
 #include <QString>
 #include <QTransform>
 
+#include <exiv2/exiv2.hpp>
+#include <iostream>
+#include <iomanip>
+#include <cassert>
+
 namespace Ui {
 class dadaPhoto;
 }
@@ -31,6 +36,7 @@ public slots:
 
 private:
     void redimensionne();
+    void readExif(QString nom);
 
     Ui::dadaPhoto *ui;
     QLabel *imageLabel;

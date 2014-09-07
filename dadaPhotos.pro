@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = dadaPhotos
 TEMPLATE = app
 
+LIBS += -lexiv2
 
 SOURCES += main.cpp\
         dadaphoto.cpp

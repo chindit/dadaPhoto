@@ -47,6 +47,7 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
 
     if(!fichiers.empty()){
         image = new QPixmap(dossier.path()+"/"+fichiers.first());
+        this->readExif(dossier.path()+"/"+fichiers.first());
         currentPhoto = fichiers.first();
         ui->label_nombre->setText("1/"+QString::number(fichiers.size()));
     }
@@ -109,6 +110,7 @@ void dadaPhoto::changePhoto(int pos){
     }
     delete image;
     image = new QPixmap(nom);
+    this->readExif(nom);
     currentPhoto = fichiers.at(posValide);
 
     //Actualisation de la position
@@ -237,7 +239,7 @@ void dadaPhoto::previousImage(){
 }
 
 void dadaPhoto::about(){
-    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.1<br><b>Créé par: </b>David Lumaye");
+    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.2.0<br><b>Créé par: </b>David Lumaye");
 }
 
 void dadaPhoto::chooseDir(){
@@ -303,4 +305,32 @@ void dadaPhoto::rotateRight(){
     delete image;
     image = new QPixmap(temp);
     this->redimensionne();
+}
+
+void dadaPhoto::readExif(QString nom){
+    std::string nomImage; nomImage = nom.toStdString();
+    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(nomImage);
+       assert(image.get() != 0);
+       image->readMetadata();
+
+       Exiv2::ExifData &exifData = image->exifData();
+       if (exifData.empty()) {
+           std::string error(nomImage);
+           error += ": No Exif data found in the file";
+           throw Exiv2::Error(1, error);
+       }
+       Exiv2::ExifData::const_iterator end = exifData.end();
+       for (Exiv2::ExifData::const_iterator i = exifData.begin(); i != end; ++i) {
+           if(i->key() == "Exif.Image.Orientation"){
+               if(i->value().toLong() == 6){
+                   //Si l'image est en mode portrait, on effectue une rotation de 90° horaire pour qu'elle s'affiche correctement
+                   this->rotateRight();
+               }
+               else{
+                   //On ne fait rien, l'image est bien mise
+               }
+               break;
+           }//Fin du «if»
+       }//Fin de la bougle
+       return;
 }
