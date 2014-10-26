@@ -13,6 +13,7 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     connect(ui->actionOuvrir_un_dossier, SIGNAL(triggered()), this, SLOT(chooseDir()));
     connect(ui->actionQuitter, SIGNAL(triggered()), this, SLOT(askQuit()));
     connect(ui->actionSauvegarder, SIGNAL(triggered()), this, SLOT(prepareApply()));
+    connect(ui->actionImporter, SIGNAL(triggered()), this, SLOT(importPictures()));
 
     //Préparation des boutons
     ui->pushButton_imprimer->setCheckable(true);
@@ -39,6 +40,16 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     }
     //Si on est ici, c'est que le dossier est prêt
     //On charge la liste des fichiers dans le QListWidget
+    this->setPictureList();
+}
+
+dadaPhoto::~dadaPhoto(){
+    delete ui;
+    if(!fichiers.empty())
+        delete image;
+}
+
+void dadaPhoto::setPictureList(){
     dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
     fichiers = dossier.entryList(QDir::Files);
     ui->listWidget->addItems(fichiers);
@@ -51,12 +62,6 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
         currentPhoto = fichiers.first();
         ui->label_nombre->setText("1/"+QString::number(fichiers.size()));
     }
-}
-
-dadaPhoto::~dadaPhoto(){
-    delete ui;
-    if(!fichiers.empty())
-        delete image;
 }
 
 void dadaPhoto::resizeEvent(QResizeEvent* event)
@@ -226,6 +231,10 @@ void dadaPhoto::apply(){
 
     //Petit message
     QMessageBox::information(this, "Fini!", "Voilà, tout a été déplacé et/ou supprimé.  Pour rappel, les photos à imprimer se trouvent ici:"+QDir::homePath()+"/Images/Imprimer et les photos visitées ici: "+QDir::homePath()+"/Images/Photos_vues");
+
+    //Et on ré-actualise la liste
+    ui->listWidget->clear();
+    this->setPictureList();
 }
 
 void dadaPhoto::nextImage(){
@@ -252,12 +261,7 @@ void dadaPhoto::chooseDir(){
     }
     dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
     fichiers = dossier.entryList(QDir::Files);
-    /*for(int i=0; i<fichiers.size(); i++){
-        QListWidgetItem *item = new QListWidgetItem(fichiers.at(i));
-        ui->listWidget->addItem(item);
-        if(i==0){ui->listWidget->setCurrentItem(item);}
-    }*/
-    //ui->listWidget->setCurrentRow(1, QItemSelectionModel::Select);
+
     ui->listWidget->addItems(fichiers);
     if(!fichiers.empty()){
         image = new QPixmap(dossier.path()+"/"+fichiers.first());
@@ -333,4 +337,112 @@ void dadaPhoto::readExif(QString nom){
            }//Fin du «if»
        }//Fin de la bougle
        return;
+}
+
+void dadaPhoto::importPictures(){
+    gphoto2 = new QProcess;
+    gphoto2->start("gphoto2 -v");
+    gphoto2->waitForFinished();
+    if(gphoto2->error() != QProcess::UnknownError){
+        QMessageBox::critical(this, "Erreur fatale", "Une erreur est survenue lors du lancement du programme d'import de photos.\nSoit le programme (gphoto2) n'est pas installé, soit il ne s'appelle plus «gphoto2».\nDans tous les cas, il m'est impossible d'importer les photos.\nDésolé :(");
+        return;
+    }
+    bool continuer=true;
+    while(continuer){
+        gphoto2->start("bash", QStringList() << "-c" << "gphoto2 --auto-detect | grep -c usb");
+        gphoto2->waitForFinished();
+        //On passe par QString puis INT pour éviter des problèmes de mauvaise conversion
+        QString stringResultat = QString(gphoto2->readAll().trimmed());
+        int valeur = stringResultat.toInt();
+        if(valeur == 0){
+            gphoto2->close();
+            int reponse = QMessageBox::warning(this, "Pas d'appareil photo", "L'appareil photo n'a <b>pas pu être trouvé</b><br />Pour résoudre ce problème:<br /> \
+                                                               1)Vérifie que le cable est bien branché<br /> \
+                    2)Éteins et rallume l'appareil photo [ON->OFF->ON].  Il n'est détectable <b>QUE</b> pendant 10 secondes, ce qui peut expliquer le problème<br /> \
+                    3)Si ça ne fonctionne toujours pas, débranche l'appareil photo, retire la carte, remets-la et rebranche tout.<br /> \
+                    4)Refais les 3 premières étapes <br /> \
+                    5)Si ça échoue toujours, abandonne et appelle quelqu'un", QMessageBox::Retry | QMessageBox::Abort);
+            if(reponse == QMessageBox::Abort){
+                return;
+            }
+        }
+        else{
+            continuer = false;
+        }
+    }
+    //On liste les photos
+    gphoto2->close();
+    gphoto2->start("bash", QStringList() << "-c" << "gphoto2 --list-files | wc -l");
+    gphoto2->waitForFinished();
+    bool isOk = false;
+    QString conversion = QString(gphoto2->readAll().trimmed());
+    nbPhotos = conversion.toInt(&isOk);
+    if(!isOk){
+        QMessageBox::critical(this, "Impossible de détecter les photos", "<b>HÉLAS…</b> Il n'est pas possible de déterminer le nombre de photos à importer :(<br /> \
+                              <b>Que faire?</b><br /> \
+                                           1)Éteins et ralumme l'appareil photo.  Il n'est détectable <b>QUE</b> pendant 10 secondes, ce qui pose un <b>GROS</b> problème<br /> \
+                2)Clique sur «OK» (dans cette boîte) et recommence à faire «Fichier>Importer» et tout <i>devrait</i> fonctionner.<br /> \
+                Et <i>zen</i>, c'est rien de grave.");
+                return;
+    }
+    gphoto2->close();
+    //Initialisation de la position
+    position = 1;
+
+    QDialog *telechargement = new QDialog;
+    telechargement->setWindowIcon(QIcon(":/images/dadaphoto.png"));
+    QLabel *titre = new QLabel("Téléchargement des photos");
+    actuel = new QLabel("1");
+    QLabel *total = new QLabel("/"+QString::number(nbPhotos));
+    copyOutput = new QPlainTextEdit();
+    QGridLayout *layout = new QGridLayout;
+    layout->addWidget(titre, 0, 0, 1, 2, Qt::AlignCenter);
+    layout->addWidget(actuel, 1, 0);
+    layout->addWidget(total, 1, 1);
+    layout->addWidget(copyOutput, 2, 0, 1, 2, Qt::AlignCenter);
+    telechargement->setLayout(layout);
+    telechargement->show();
+
+    gphoto2->start("/home/leonard/download.sh");
+    connect(gphoto2,SIGNAL(readyReadStandardOutput()),this,SLOT(readyReadStandardOutput()));
+
+    //EventLoop pour attendre la fin de la copie.
+    QEventLoop eventLoop;
+    QObject::connect(gphoto2, SIGNAL(finished(int)), &eventLoop, SLOT(quit()));
+    eventLoop.exec();
+    telechargement->close();
+
+    QMessageBox::information(this, "Import terminé", "Voilà, toutes les photos ont été importées.  Tu peux maintenant les regarder normalement.");
+    /*int reponse = QMessageBox::question(this, "Supprimer les photos de la carte?", "dadaPhotos te permet de supprimer automatiquement toutes les photos de la carte SD (sur ton appareil photo)<br /><b>ATTENTION</b>Cette opération est irréversible. <br />Souhaites-tu supprimer les photos de la carte SD?", QMessageBox::Yes | QMessageBox::No);
+    if(reponse == QMessageBox::Yes){
+        gphoto2->close();
+        gphoto2->start("bash", QStringList() << "-c" << "gphtoto2 --delet-all-files");
+        QMessageBox temp;
+        temp.setStandardButtons(QMessageBox::Ok);
+        temp.setIcon(QMessageBox::Information);
+        temp.setText("Les photos sont en cours de suppression.  Ce message se fermera quand l'opération sera terminée");
+        temp.setWindowTitle("Suppression en cours");
+        temp.show();
+        gphoto2->waitForFinished();
+        connect(gphoto2, SIGNAL(finished(int)), &temp, SLOT(close()));
+    }*/
+
+    //On actualise la liste d'images
+    ui->listWidget->clear();
+    this->setPictureList();
+
+    delete gphoto2;
+    delete copyOutput;
+    delete actuel;
+}
+
+void dadaPhoto::readyReadStandardOutput(){
+    copyOutput->insertPlainText(QString(gphoto2->readAllStandardOutput()));
+    position++;
+    actuel->setText(QString::number(position));
+    QTextCursor c =  copyOutput->textCursor();
+    c.movePosition(QTextCursor::End);
+    copyOutput->setTextCursor(c);
+    copyOutput->ensureCursorVisible();
+    return;
 }

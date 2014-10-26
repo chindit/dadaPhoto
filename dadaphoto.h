@@ -9,6 +9,8 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QPlainTextEdit>
+#include <QProcess>
 #include <QSize>
 #include <QString>
 #include <QTransform>
@@ -44,7 +46,12 @@ private:
     QPixmap *image;
     QStringList supprimer,imprimer,visitees,fichiers;
     QString currentPhoto;
+    QPlainTextEdit *copyOutput;
+    QProcess *gphoto2;
+    QLabel *actuel;
+
     bool changement;
+    int nbPhotos, position;
 
 private slots:
     void verifieEtat(bool etat);
@@ -57,6 +64,11 @@ private slots:
     void askQuit();
     void rotateLeft();
     void rotateRight();
+    void importPictures();
+    void readyReadStandardOutput();
+
+private:
+    void setPictureList();
 
 };
 

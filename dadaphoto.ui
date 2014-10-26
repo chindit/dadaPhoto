@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>717</width>
-    <height>537</height>
+    <height>548</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -306,7 +306,7 @@
      <x>0</x>
      <y>0</y>
      <width>717</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFichier">
@@ -314,6 +314,7 @@
      <string>Fichier</string>
     </property>
     <addaction name="actionOuvrir_un_dossier"/>
+    <addaction name="actionImporter"/>
     <addaction name="actionSauvegarder"/>
     <addaction name="actionQuitter"/>
    </widget>
@@ -371,6 +372,15 @@
    </property>
    <property name="text">
     <string>À propos de Qt</string>
+   </property>
+  </action>
+  <action name="actionImporter">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/menus/images/import.png</normaloff>:/menus/images/import.png</iconset>
+   </property>
+   <property name="text">
+    <string>Importer</string>
    </property>
   </action>
  </widget>
