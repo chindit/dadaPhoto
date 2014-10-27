@@ -7,6 +7,7 @@
         <file>images/quitter.png</file>
         <file>images/qt.png</file>
         <file>images/import.png</file>
+        <file>images/nettoyer.png</file>
     </qresource>
     <qresource prefix="/boutons">
         <file>images/next.png</file>

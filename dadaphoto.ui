@@ -315,6 +315,7 @@
     </property>
     <addaction name="actionOuvrir_un_dossier"/>
     <addaction name="actionImporter"/>
+    <addaction name="actionNettoyer"/>
     <addaction name="actionSauvegarder"/>
     <addaction name="actionQuitter"/>
    </widget>
@@ -381,6 +382,15 @@
    </property>
    <property name="text">
     <string>Importer</string>
+   </property>
+  </action>
+  <action name="actionNettoyer">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/menus/images/nettoyer.png</normaloff>:/menus/images/nettoyer.png</iconset>
+   </property>
+   <property name="text">
+    <string>Nettoyer</string>
    </property>
   </action>
  </widget>

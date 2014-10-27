@@ -66,6 +66,7 @@ private slots:
     void rotateRight();
     void importPictures();
     void readyReadStandardOutput();
+    void cleanDirectory();
 
 private:
     void setPictureList();

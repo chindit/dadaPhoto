@@ -14,6 +14,7 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     connect(ui->actionQuitter, SIGNAL(triggered()), this, SLOT(askQuit()));
     connect(ui->actionSauvegarder, SIGNAL(triggered()), this, SLOT(prepareApply()));
     connect(ui->actionImporter, SIGNAL(triggered()), this, SLOT(importPictures()));
+    connect(ui->actionNettoyer, SIGNAL(triggered()), this, SLOT(cleanDirectory()));
 
     //Préparation des boutons
     ui->pushButton_imprimer->setCheckable(true);
@@ -444,5 +445,24 @@ void dadaPhoto::readyReadStandardOutput(){
     c.movePosition(QTextCursor::End);
     copyOutput->setTextCursor(c);
     copyOutput->ensureCursorVisible();
+    return;
+}
+
+void dadaPhoto::cleanDirectory(){
+    //Cette fonction supprimer les doublons du répertoire de base et du répertoire de photos vues.  Les photos vues sont prioritaires
+    dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
+    QStringList toShow = dossier.entryList(QDir::Files);
+    QDir dirDossier =  QDir(QDir::homePath()+"/Images/Photos_vues");
+    if(!dirDossier.exists()){
+        return;
+    }
+    dirDossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
+    QStringList showed = dirDossier.entryList(QDir::Files);
+    foreach(const QString &str, toShow){
+        if(showed.contains(str)){
+            QFile toDelete(dossier.path()+"/"+str);
+            toDelete.remove();
+        }
+    }
     return;
 }
