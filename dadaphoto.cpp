@@ -39,9 +39,16 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
             }
         }
     }
+
+    //On détecte les doublons
+    this->detectDirtyDirectory();
+
     //Si on est ici, c'est que le dossier est prêt
     //On charge la liste des fichiers dans le QListWidget
     this->setPictureList();
+
+    //Connexion de l'action Quitter
+    connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(close()));
 }
 
 dadaPhoto::~dadaPhoto(){
@@ -454,7 +461,34 @@ void dadaPhoto::readyReadStandardOutput(){
     return;
 }
 
+void dadaPhoto::detectDirtyDirectory(){
+    //Détecte s'il y a des photos doublon et alerte l'utilisateur
+    bool doublons = false;
+    dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
+    QStringList toShow = dossier.entryList(QDir::Files);
+    QDir dirDossier =  QDir(QDir::homePath()+"/Images/Photos_vues");
+    if(!dirDossier.exists()){
+        return;
+    }
+    dirDossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
+    QStringList showed = dirDossier.entryList(QDir::Files);
+    foreach(const QString &str, toShow){
+        if(showed.contains(str)){
+            doublons = true;
+            break;
+        }
+    }
+
+    if(doublons){
+        int reponse = QMessageBox::information(this, "Photos en double", "Des photos <b>en double</b> ont été trouvées.<br />Cela signifie qu'elles sont <b>à la fois</b> vue <b>et</b> non-vues.  D'où, un petit casse-tête.<br />Si tu le souhaites, <i>dadaPhotos</i> peut supprimer les doublons.<br />Concrètement, qu'est-ce qui va se passer?<br /><i>dadaPhotos</i> va supprimer des photos à voir toutes celles qui ont déjà été vues.  Tu ne perdras <b>aucune</b> photo.<br /><b>NOTE:</b>Suite à cette opération, il se peut que tu revoies des photos vues que tu as supprimées dans le passé.  Dans ce cas, il faut les supprimer à nouveau.<br />Souhaites-tu nettoyer les doublons?", QMessageBox::Yes | QMessageBox::No);
+        if(reponse == QMessageBox::Yes){
+            this->cleanDirectory();
+        }
+    }
+}
+
 void dadaPhoto::cleanDirectory(){
+    int nombre = 0;
     //Cette fonction supprimer les doublons du répertoire de base et du répertoire de photos vues.  Les photos vues sont prioritaires
     dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
     QStringList toShow = dossier.entryList(QDir::Files);
@@ -468,11 +502,25 @@ void dadaPhoto::cleanDirectory(){
         if(showed.contains(str)){
             QFile toDelete(dossier.path()+"/"+str);
             toDelete.remove();
+            nombre++;
         }
     }
 
     //Et on réactualise la liste d'image
     ui->listWidget->clear();
     this->setPictureList();
+
+    //On affiche un message
+    QMessageBox::information(this, "Nettoyage terminé", "Voilà, "+QString::number(nombre)+" photos ont été supprimées.");
+    return;
+}
+
+void dadaPhoto::close(){
+    if(visitees.size() > 1){
+        int reponse = QMessageBox::warning(this, "Changement non enregistrés", "<b>ATTENTION</b>   Tu as regardé des images sans appuyer sur «valider».  Souhaites-tu valider les changements effectués?", QMessageBox::Yes | QMessageBox::No);
+        if(reponse == QMessageBox::Yes){
+            this->apply();
+        }
+    }
     return;
 }

@@ -36,9 +36,13 @@ public slots:
     void changePhoto(int pos=-2);
     void resizeEvent(QResizeEvent *);
 
+private slots:
+    void close();
+
 private:
     void redimensionne();
     void readExif(QString nom);
+    void detectDirtyDirectory();
 
     Ui::dadaPhoto *ui;
     QLabel *imageLabel;
