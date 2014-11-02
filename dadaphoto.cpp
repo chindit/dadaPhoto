@@ -114,6 +114,12 @@ void dadaPhoto::changePhoto(int pos){
             ui->listWidget->setCurrentRow(posValide);
         }
     }
+
+    //On vérifie si l'image existe.  Si non, on quitte (survient lors de l'action «Valider» et du renouvellement de QListWidget
+    QFile photo; photo.setFileName(nom);
+    if(!photo.exists()){
+        return;
+    }
     delete image;
     image = new QPixmap(nom);
     this->readExif(nom);
@@ -464,5 +470,9 @@ void dadaPhoto::cleanDirectory(){
             toDelete.remove();
         }
     }
+
+    //Et on réactualise la liste d'image
+    ui->listWidget->clear();
+    this->setPictureList();
     return;
 }
