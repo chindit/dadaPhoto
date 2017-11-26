@@ -12,13 +12,15 @@
 #include <QPlainTextEdit>
 #include <QProcess>
 #include <QSize>
+#include <QStandardPaths>
 #include <QString>
 #include <QTransform>
 
-#include <exiv2/exiv2.hpp>
+#include "lib/easyexif/exif.h"
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+
 
 namespace Ui {
 class dadaPhoto;
@@ -69,12 +71,11 @@ private slots:
     void rotateLeft();
     void rotateRight();
     void importPictures();
+    void importPicturesLinux();
+    void importPicturesWindows();
     void readyReadStandardOutput();
     void cleanDirectory();
-
-private:
     void setPictureList();
-
 };
 
 #endif // DADAPHOTO_H

@@ -314,9 +314,10 @@
      <string>Fichier</string>
     </property>
     <addaction name="actionOuvrir_un_dossier"/>
+    <addaction name="actionSauvegarder"/>
     <addaction name="actionImporter"/>
     <addaction name="actionNettoyer"/>
-    <addaction name="actionSauvegarder"/>
+    <addaction name="actionRefreshList"/>
     <addaction name="actionQuitter"/>
    </widget>
    <widget class="QMenu" name="menuAide">
@@ -391,6 +392,11 @@
    </property>
    <property name="text">
     <string>Nettoyer</string>
+   </property>
+  </action>
+  <action name="actionRefreshList">
+   <property name="text">
+    <string>Rafraîchir la liste</string>
    </property>
   </action>
  </widget>

@@ -15,6 +15,7 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     connect(ui->actionSauvegarder, SIGNAL(triggered()), this, SLOT(prepareApply()));
     connect(ui->actionImporter, SIGNAL(triggered()), this, SLOT(importPictures()));
     connect(ui->actionNettoyer, SIGNAL(triggered()), this, SLOT(cleanDirectory()));
+    connect(ui->actionRefreshList, SIGNAL(triggered()), this, SLOT(setPictureList()));
 
     //Préparation des boutons
     ui->pushButton_imprimer->setCheckable(true);
@@ -28,10 +29,14 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     connect(ui->pushButton_horaire, SIGNAL(clicked()), this, SLOT(rotateRight()));
 
     //Par défaut, c'est ~/Images/Photos qu'on charge
+#ifdef Q_OS_LINUX
     dossier = QDir::homePath()+"/Images/Photos";
+#else
+    dossier = QDir(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
+#endif
     QDir dirImages(dossier);
     if(!dirImages.exists()){
-        int resultat = QMessageBox::question(this, "Dossier non trouvé", "Le dossier «Images/Photos» n'existe pas.\nVeux-tu charger les images d'un autre dossier?\nSi tu réponds «Non», le programme restera vide", QMessageBox::Yes|QMessageBox::No);
+        int resultat = QMessageBox::question(this, "Dossier non trouvé", QString("Le dossier «%1» n'existe pas.\nVeux-tu charger les images d'un autre dossier?\nSi tu réponds «Non», le programme restera vide").arg(this->dossier.absolutePath()), QMessageBox::Yes|QMessageBox::No);
         if(resultat == QMessageBox::Yes){
             QString chemin = QFileDialog::getExistingDirectory(this);
             if(!chemin.isEmpty() && !chemin.isNull()){
@@ -60,6 +65,7 @@ dadaPhoto::~dadaPhoto(){
 void dadaPhoto::setPictureList(){
     dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
     fichiers = dossier.entryList(QDir::Files);
+    ui->listWidget->clear();
     ui->listWidget->addItems(fichiers);
 
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(changePhoto()));
@@ -327,33 +333,53 @@ void dadaPhoto::rotateRight(){
 
 void dadaPhoto::readExif(QString nom){
     std::string nomImage; nomImage = nom.toStdString();
-    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(nomImage);
-       assert(image.get() != 0);
-       image->readMetadata();
+    // Read the JPEG file into a buffer
+    FILE *fp = fopen(nomImage.c_str(), "rb");
+    if (!fp) {
+      printf("Can't open file.\n");
+      return;
+    }
+    fseek(fp, 0, SEEK_END);
+    unsigned long fsize = ftell(fp);
+    rewind(fp);
+    unsigned char *buf = new unsigned char[fsize];
+    if (fread(buf, 1, fsize, fp) != fsize) {
+      printf("Can't read file.\n");
+      delete[] buf;
+      return;
+    }
+    fclose(fp);
 
-       Exiv2::ExifData &exifData = image->exifData();
-       if (exifData.empty()) {
-           std::string error(nomImage);
-           error += ": No Exif data found in the file";
-           throw Exiv2::Error(1, error);
-       }
-       Exiv2::ExifData::const_iterator end = exifData.end();
-       for (Exiv2::ExifData::const_iterator i = exifData.begin(); i != end; ++i) {
-           if(i->key() == "Exif.Image.Orientation"){
-               if(i->value().toLong() == 6){
-                   //Si l'image est en mode portrait, on effectue une rotation de 90° horaire pour qu'elle s'affiche correctement
-                   this->rotateRight();
-               }
-               else{
-                   //On ne fait rien, l'image est bien mise
-               }
-               break;
-           }//Fin du «if»
-       }//Fin de la bougle
-       return;
+    // Parse EXIF
+    easyexif::EXIFInfo result;
+    int code = result.parseFrom(buf, fsize);
+    delete[] buf;
+    if (code) {
+      printf("Error parsing EXIF: code %d\n", code);
+      return;
+    }
+
+    if (result.Orientation == 6) {
+        this->rotateRight();
+    }
+
+    return;
 }
 
-void dadaPhoto::importPictures(){
+void dadaPhoto::importPictures() {
+#ifdef Q_OS_LINUX
+    return this->importPicturesLinux();
+#else
+    return this->importPicturesWindows();
+#endif
+}
+
+void dadaPhoto::importPicturesWindows(){
+    QMessageBox::warning(this, "Impossible d'importer", QString("Désolé… Impossible d'importer tes photos depuis Windows.  Copie-colle tes fichiers directement dans ce répertoire : %1").arg(this->dossier.absolutePath()));
+    return;
+}
+
+void dadaPhoto::importPicturesLinux(){
     gphoto2 = new QProcess;
     gphoto2->start("gphoto2 -v");
     gphoto2->waitForFinished();
