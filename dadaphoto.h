@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <cassert>
 
-
 namespace Ui {
 class dadaPhoto;
 }
@@ -34,6 +33,9 @@ public:
     explicit dadaPhoto(QWidget *parent = 0);
     ~dadaPhoto();
 
+    const QString VIEWED_PICTURES_DIRECTORY_NAME = "Photos vues";
+    const QString PRINTING_PICTURES_DIRECTORY_NAME = "À imprimer";
+
 public slots:
     void changePhoto(int pos=-2);
     void resizeEvent(QResizeEvent *);
@@ -45,10 +47,13 @@ private:
     void redimensionne();
     void readExif(QString nom);
     void detectDirtyDirectory();
+    void prepareDestinationDirectories();
+    QDir getWritableLocation(QDir rootLocation, QString wantedLocation);
+    QDir getFallbackDirectory(QString wantedLocation);
 
     Ui::dadaPhoto *ui;
     QLabel *imageLabel;
-    QDir dossier;
+    QDir dossier, viewedPictures, printedPictures;
     QPixmap *image;
     QStringList supprimer,imprimer,visitees,fichiers;
     QString currentPhoto;

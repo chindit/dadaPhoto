@@ -30,8 +30,14 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
 
     //Par défaut, c'est ~/Images/Photos qu'on charge
 #ifdef Q_OS_LINUX
+    // Obsolete.  Should be removed
     dossier = QDir::homePath()+"/Images/Photos";
+    QDir picturesDirectory(dossier);
+    if (!picturesDirectory.exists()) {
+        dossier = QDir(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
+    }
 #else
+    // Should be default
     dossier = QDir(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
 #endif
     QDir dirImages(dossier);
@@ -75,6 +81,16 @@ void dadaPhoto::setPictureList(){
         this->readExif(dossier.path()+"/"+fichiers.first());
         currentPhoto = fichiers.first();
         ui->label_nombre->setText("1/"+QString::number(fichiers.size()));
+        ui->listWidget->setCurrentRow(0);
+
+        // Toggle buttons
+        ui->pushButton_antihoraire->setEnabled(true);
+        ui->pushButton_horaire->setEnabled(true);
+        ui->pushButton_imprimer->setEnabled(true);
+        ui->pushButton_precedent->setEnabled(true);
+        ui->pushButton_suivant->setEnabled(true);
+        ui->pushButton_supprimer->setEnabled(true);
+        ui->pushButton_valider->setEnabled(true);
     }
 }
 
@@ -173,6 +189,8 @@ void dadaPhoto::verifieEtat(bool etat){
     //Alerte de sécurité
     if(ui->pushButton_imprimer->isChecked() && ui->pushButton_supprimer->isChecked()){
         QMessageBox::information(this, "Double acction", "ATTENTION!  Tu as sélectionné À LA FOIS l'action de supprime ET d'imprimer la photo.\nLes deux n'étant pas possible en même temps, il faut choisir :-)");
+        ui->pushButton_imprimer->setChecked(false);
+        ui->pushButton_supprimer->setChecked(false);
     }
 
     if(etat){
@@ -214,37 +232,25 @@ void dadaPhoto::prepareApply(){
 }
 
 void dadaPhoto::apply(){
-    //1 créer un nouveau dossier
-    //QDate current = QDate::currentDate();
-    //QString nomDossier = current.toString("ddMMyy");
-    QDir dirDossier =  QDir(QDir::homePath()+"/Images/Photos_vues");
-    if(!dirDossier.exists()){
-        //Le dossier n'existe pas, on peut le créer
-        dirDossier.mkdir(dirDossier.path());
-    }
-    //Création des autres dossiers
-    dirDossier.setPath(QDir::homePath()+"/Images/Imprimer");
-    if(!dirDossier.exists()){
-        dirDossier.mkdir(dirDossier.path());
-    }
+    this->prepareDestinationDirectories();
 
-    //2 Supprimer
+    //1) Deletion
     for(int i=0; i<supprimer.size(); i++){
-        dirDossier.remove(dossier.path()+"/"+supprimer.at(i));
+        this->dossier.remove(dossier.path()+"/"+supprimer.at(i));
     }
     supprimer.clear();
 
-    //3 Copier
+    //2) Copying
     for(int i=0; i<imprimer.size(); i++){
-        QFile::copy(dossier.path()+"/"+imprimer.at(i), QDir::homePath()+"/Images/Imprimer/"+imprimer.at(i));
+        QFile::copy(dossier.path()+"/"+imprimer.at(i), this->printedPictures.absolutePath()+"/"+imprimer.at(i));
     }
     imprimer.clear();
 
-    //4 Déplacer
+    //3) Moving
     for(int i=0; i<visitees.size(); i++){
         QFile photo; photo.setFileName(dossier.path()+"/"+visitees.at(i));
         if(photo.exists()){
-            photo.rename(QDir::homePath()+"/Images/Photos_vues/"+visitees.at(i));
+            photo.rename(this->viewedPictures.absolutePath()+"/"+visitees.at(i));
         }
     }
     visitees.clear();
@@ -268,7 +274,7 @@ void dadaPhoto::previousImage(){
 }
 
 void dadaPhoto::about(){
-    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.2.0<br><b>Créé par: </b>David Lumaye");
+    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.5.0<br><b>Créé par: </b>David Lumaye");
 }
 
 void dadaPhoto::chooseDir(){
@@ -279,19 +285,7 @@ void dadaPhoto::chooseDir(){
     else{
         return;
     }
-    dossier.setNameFilters(QStringList()<<"*.jpg"<<"*.JPG"<<"*.png"<<"*.PNG"<<"*.jpeg"<<"*.JPEG"<<"*.raw"<<"*.RAW"<<"*.gif"<<"*.GIF"<<"*.bmp"<<"*.BMP");
-    fichiers = dossier.entryList(QDir::Files);
-
-    ui->listWidget->addItems(fichiers);
-    if(!fichiers.empty()){
-        image = new QPixmap(dossier.path()+"/"+fichiers.first());
-        currentPhoto = fichiers.first();
-        //Par prudence, on actualise
-        this->redimensionne();
-    }
-    if(fichiers.size() > 0){
-        ui->listWidget->setCurrentRow(0);
-    }
+    this->setPictureList();
 }
 
 void dadaPhoto::askQuit(){
@@ -309,7 +303,7 @@ void dadaPhoto::askQuit(){
         }
     }
     else{
-        this->close();
+        qApp->quit();
     }
 }
 
@@ -549,4 +543,69 @@ void dadaPhoto::close(){
         }
     }
     return;
+}
+
+/**
+ * @brief dadaPhoto::prepareDestinationDirectories
+ * @internal
+ */
+void dadaPhoto::prepareDestinationDirectories() {
+    this->viewedPictures = this->getWritableLocation(this->dossier, dadaPhoto::VIEWED_PICTURES_DIRECTORY_NAME);
+    this->printedPictures = this->getWritableLocation(this->dossier, dadaPhoto::PRINTING_PICTURES_DIRECTORY_NAME);
+}
+
+/**
+ * @brief dadaPhoto::getWritableLocation
+ * @internal
+ * @param rootLocation
+ * @param wantedLocation
+ * @return
+ */
+QDir dadaPhoto::getWritableLocation(QDir rootLocation, QString wantedLocation) {
+    QDir targetDirectory = QDir(rootLocation.absolutePath()+"/"+wantedLocation);
+
+    // If directory already exists
+    if (targetDirectory.exists()) {
+        QFileInfo targetDirectoryInfo = QFileInfo(targetDirectory.absolutePath());
+        // It is writable, perfect
+        if (targetDirectoryInfo.isWritable()) {
+            return targetDirectory;
+        }
+        // Not writable, requesting alternate location
+        return this->getFallbackDirectory(wantedLocation);
+    }
+
+    // If here, directory doesn't exists
+    bool creationSuccessFull = targetDirectory.mkdir(targetDirectory.absolutePath());
+
+    if (creationSuccessFull) {
+        return targetDirectory;
+    }
+
+    // If here, unable to create directory
+    return this->getFallbackDirectory(wantedLocation);
+}
+
+/**
+ * @brief dadaPhoto::getFallbackDirectory
+ * @internal
+ * @param wantedLocation
+ * @return
+ */
+QDir dadaPhoto::getFallbackDirectory(QString wantedLocation) {
+    QDir tempDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+    QDir fallbackDirectory = QDir(tempDirectory.absolutePath()+"/"+wantedLocation);
+    // Check for writability in temp location
+    QFileInfo fallbackDirectoryInfo = QFileInfo(fallbackDirectory.absolutePath());
+    if (fallbackDirectoryInfo.isWritable()) {
+        bool newDirectory = fallbackDirectory.mkdir(fallbackDirectory.absolutePath()+"/"+wantedLocation);
+        if (newDirectory) {
+            // A warning because fallback is working
+            QMessageBox::warning(this, tr("Dossier non inscriptible"), tr("Le dossier «%1» n'est pas accessible en écriture.  Les données seront mises dans %2").arg(fallbackDirectory.absolutePath()).arg(fallbackDirectory.absolutePath()));
+            return fallbackDirectory;
+        }
+    }
+    // Fatal failure
+    QMessageBox::critical(this, tr("Dossier non inscriptible"), tr("Aucun dossier n'est accessible en écriture.  Les changements ne seront donc *PAS* pris en compte."));
+    return QDir();
 }

@@ -62,6 +62,9 @@
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QPushButton" name="pushButton_valider">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -111,6 +114,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_antihoraire">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -137,6 +143,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_horaire">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -176,6 +185,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_imprimer">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -205,6 +217,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_supprimer">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -244,6 +259,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_suivant">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -270,6 +288,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_precedent">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>125</width>
@@ -306,12 +327,12 @@
      <x>0</x>
      <y>0</y>
      <width>717</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFichier">
     <property name="title">
-     <string>Fichier</string>
+     <string>Fichie&amp;r</string>
     </property>
     <addaction name="actionOuvrir_un_dossier"/>
     <addaction name="actionSauvegarder"/>
@@ -337,7 +358,7 @@
      <normaloff>:/menus/images/quitter.png</normaloff>:/menus/images/quitter.png</iconset>
    </property>
    <property name="text">
-    <string>Quitter</string>
+    <string>&amp;Quitter</string>
    </property>
   </action>
   <action name="action_propos">
@@ -346,7 +367,7 @@
      <normaloff>:/menus/images/about.png</normaloff>:/menus/images/about.png</iconset>
    </property>
    <property name="text">
-    <string>À propos</string>
+    <string>&amp;À propos</string>
    </property>
   </action>
   <action name="actionOuvrir_un_dossier">
@@ -355,7 +376,7 @@
      <normaloff>:/menus/images/ouvrir.png</normaloff>:/menus/images/ouvrir.png</iconset>
    </property>
    <property name="text">
-    <string>Ouvrir un dossier</string>
+    <string>&amp;Ouvrir un dossier</string>
    </property>
   </action>
   <action name="actionSauvegarder">
@@ -364,7 +385,7 @@
      <normaloff>:/menus/images/enregistrer.png</normaloff>:/menus/images/enregistrer.png</iconset>
    </property>
    <property name="text">
-    <string>Sauvegarder</string>
+    <string>&amp;Sauvegarder</string>
    </property>
   </action>
   <action name="action_propos_de_Qt">
@@ -373,7 +394,7 @@
      <normaloff>:/menus/images/qt.png</normaloff>:/menus/images/qt.png</iconset>
    </property>
    <property name="text">
-    <string>À propos de Qt</string>
+    <string>À &amp;propos de Qt</string>
    </property>
   </action>
   <action name="actionImporter">
@@ -382,7 +403,7 @@
      <normaloff>:/menus/images/import.png</normaloff>:/menus/images/import.png</iconset>
    </property>
    <property name="text">
-    <string>Importer</string>
+    <string>&amp;Importer</string>
    </property>
   </action>
   <action name="actionNettoyer">
@@ -391,12 +412,12 @@
      <normaloff>:/menus/images/nettoyer.png</normaloff>:/menus/images/nettoyer.png</iconset>
    </property>
    <property name="text">
-    <string>Nettoyer</string>
+    <string>&amp;Nettoyer</string>
    </property>
   </action>
   <action name="actionRefreshList">
    <property name="text">
-    <string>Rafraîchir la liste</string>
+    <string>&amp;Rafraîchir la liste</string>
    </property>
   </action>
  </widget>
