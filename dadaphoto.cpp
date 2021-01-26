@@ -31,7 +31,7 @@ dadaPhoto::dadaPhoto(QWidget *parent) : QMainWindow(parent), ui(new Ui::dadaPhot
     //Par défaut, c'est ~/Images/Photos qu'on charge
 #ifdef Q_OS_LINUX
     // Obsolete.  Should be removed
-    dossier = QDir::homePath()+"/Images/Photos";
+    dossier.setPath(QDir::homePath()+"/Images/Photos");
     QDir picturesDirectory(dossier);
     if (!picturesDirectory.exists()) {
         dossier = QDir(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
@@ -274,7 +274,7 @@ void dadaPhoto::previousImage(){
 }
 
 void dadaPhoto::about(){
-    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.5.0<br><b>Créé par: </b>David Lumaye");
+    QMessageBox::about(this, "À propos de dadaPhoto", "<h3>À propos de dadaPhoto</h3><b>Version: </b>0.5.1<br><b>Créé par: </b>David Lumaye");
 }
 
 void dadaPhoto::chooseDir(){
@@ -375,7 +375,7 @@ void dadaPhoto::importPicturesWindows(){
 
 void dadaPhoto::importPicturesLinux(){
     gphoto2 = new QProcess;
-    gphoto2->start("gphoto2 -v");
+    gphoto2->start("gphoto2", QStringList("-v"));
     gphoto2->waitForFinished();
     if(gphoto2->error() != QProcess::UnknownError){
         QMessageBox::critical(this, "Erreur fatale", "Une erreur est survenue lors du lancement du programme d'import de photos.\nSoit le programme (gphoto2) n'est pas installé, soit il ne s'appelle plus «gphoto2».\nDans tous les cas, il m'est impossible d'importer les photos.\nDésolé :(");
@@ -437,7 +437,7 @@ void dadaPhoto::importPicturesLinux(){
     telechargement->setLayout(layout);
     telechargement->show();
 
-    gphoto2->start("/home/leonard/download.sh");
+    gphoto2->start("/home/leonard/download.sh", QStringList());
     connect(gphoto2,SIGNAL(readyReadStandardOutput()),this,SLOT(readyReadStandardOutput()));
 
     //EventLoop pour attendre la fin de la copie.
